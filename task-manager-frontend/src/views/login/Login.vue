@@ -1,0 +1,114 @@
+<template>
+  <div class="login-page">
+    <h1>Login</h1>
+    <form @submit.prevent="handleLogin" class="login-form">
+      <BaseInput
+        v-model="form.email"
+        type="email"
+        label="Email"
+        placeholder="Enter your email"
+      />
+      <BaseInput
+        v-model="form.password"
+        type="password"
+        label="Password"
+        placeholder="Enter your password"
+      />
+      <div v-if="error" class="error">{{ error }}</div>
+      <BaseButton type="submit">Login</BaseButton>
+    </form>
+  </div>
+</template>
+
+<script setup>
+import { reactive, ref } from "vue";
+import BaseInput from "../../components/ui/BaseInput.vue";
+import BaseButton from "../../components/ui/BaseButton.vue";
+import api from "../../plugins/axios"; 
+import { useUserStore } from "../../stores/user";
+import { useRouter } from "vue-router";
+
+
+// Form state
+const form = reactive({
+  email: "",
+  password: "",
+});
+
+// Error message
+const error = ref("");
+
+const userStore = useUserStore();
+
+const router = useRouter();
+
+// Handle login
+const handleLogin = async () => {
+  if (!form.email || !form.password) {
+    error.value = "Please fill in both email and password.";
+    return;
+  }
+
+  error.value = "";
+
+  try {
+
+    const { data } = await api.post("/login", {
+      email: form.email,
+      password: form.password,
+    });
+
+    console.log(data.message);
+
+    // Store user info and token in Pinia
+    userStore.setUser(data.user, data.token);
+
+    // Reset form
+    form.email = "";
+    form.password = "";
+
+    router.push("/dashboard");
+  } catch (err) {
+    if (err.response) {
+      const resData = err.response.data;
+      if (err.response.status === 422 && resData.errors) {
+        // Use line breaks for better display
+        error.value = Object.values(resData.errors).flat().join("\n");
+      } else if (resData.message) {
+        error.value = resData.message;
+      } else {
+        error.value = `Error: ${err.response.status} ${err.response.statusText}`;
+      }
+    } else {
+      error.value = "Network error or server is not responding.";
+    }
+  }
+};
+
+
+</script>
+
+<style scoped>
+.login-page {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  color: red;
+  margin-bottom: 1rem;
+}
+</style>
