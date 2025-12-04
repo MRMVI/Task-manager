@@ -35,8 +35,11 @@ const { modelValue, type, placeholder, label } = toRefs(props);
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 100%;
+  color: var(--color-text-main);
+  background-color: var(--color-background);
 }
 .input-group {
   margin-bottom: 1rem;
+  color: var(--color-text-main);
 }
 </style>

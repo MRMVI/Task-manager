@@ -27,11 +27,15 @@ const emit = defineEmits(["click"]);
 <style scoped>
 .base-button {
   padding: 0.5rem 1rem;
-  background-color: #1d4ed8;
-  color: white;
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.base-button:hover {
+  background-color: var(--color-button-hover);
 }
 .base-button:disabled {
   background-color: #94a3b8;

@@ -63,14 +63,16 @@ h2 {
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background-color: #2563eb;
-  color: white;
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
+  border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: var(--color-button-hover);
 }
 
 .error {
