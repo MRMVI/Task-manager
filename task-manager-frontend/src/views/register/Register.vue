@@ -28,6 +28,9 @@
       <div v-if="error" class="error">{{ error }}</div>
       <BaseButton type="submit">Sign Up</BaseButton>
     </form>
+    <div class="go-back-container">
+      <GoBack />
+    </div>
   </div>
 </template>
 
@@ -35,6 +38,7 @@
 import { reactive, ref } from "vue";
 import BaseInput from "../../components/ui/BaseInput.vue";
 import BaseButton from "../../components/ui/BaseButton.vue";
+import GoBack from "../../components/GoBack.vue";
 import api from "../../plugins/axios";
 
 
@@ -106,11 +110,14 @@ const handleSubmit = async () => {
   padding: 1.5rem;
   border: 1px solid #ccc;
   border-radius: 8px;
+  background-color: var(--color-background);
+  color: var(--color-text-main);
 }
 
 h1 {
   text-align: center;
   margin-bottom: 1.5rem;
+  color: var(--color-text-main);
 }
 
 .register-form {
@@ -122,5 +129,13 @@ h1 {
   color: red;
   margin-bottom: 1rem;
   white-space: pre-line;
+}
+
+.go-back-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
 }
 </style>
