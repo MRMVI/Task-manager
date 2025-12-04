@@ -1,11 +1,13 @@
 // router/index.js
 import { createRouter, createWebHistory } from "vue-router";
+import Welcome from "../components/Welcome.vue";
 import Login from "../views/login/Login.vue";
 import Register from "../views/register/Register.vue";
 import Dashboard from "../views/Dashboard.vue";
 import { useUserStore } from "../stores/user";
 
 const routes = [
+  { path: "/", component: Welcome },
   { path: "/login", component: Login },
   { path: "/register", component: Register },
   {
