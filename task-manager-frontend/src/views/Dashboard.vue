@@ -25,7 +25,7 @@ const userStore = useUserStore();
   padding: 1.5rem;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  background-color: #f9fafb;
+  background-color: var(--color-background);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
@@ -34,7 +34,7 @@ const userStore = useUserStore();
   font-weight: 600;
   margin-bottom: 1rem;
   text-align: center;
-  color: #111827;
+  color: var(--color-text-main);
 }
 
 .logout-button {
