@@ -6,27 +6,35 @@
         v-model="form.username"
         label="Username"
         placeholder="Enter your username"
+        :error="errors.username"
       />
+      
       <BaseInput
         v-model="form.email"
         type="email"
         label="Email"
         placeholder="Enter your email"
+        :error="errors.email"
       />
+      
       <BaseInput
         v-model="form.password"
         type="password"
         label="Password"
         placeholder="Enter your password"
+        :error="errors.password"
       />
+      
       <BaseInput
         v-model="form.confirmPassword"
         type="password"
         label="Confirm Password"
         placeholder="Re-enter your password"
+        :error="errors.confirmPassword"
       />
+      
       <div v-if="error" class="error">{{ error }}</div>
-      <BaseButton type="submit">Sign Up</BaseButton>
+      <BaseButton type="submit" :disabled="!isFormValid">Sign Up</BaseButton>
     </form>
     <div class="go-back-container">
       <GoBack />
@@ -35,14 +43,14 @@
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
+import { reactive, ref, computed, watch } from "vue";
 import BaseInput from "../../components/ui/BaseInput.vue";
 import BaseButton from "../../components/ui/BaseButton.vue";
 import GoBack from "../../components/GoBack.vue";
+import { useFormValidation } from "../../composables/useFormValidation";
 import api from "../../plugins/axios";
 
-
-// Reactive form state
+// Form state
 const form = reactive({
   username: "",
   email: "",
@@ -50,54 +58,100 @@ const form = reactive({
   confirmPassword: "",
 });
 
-// Error message
+// Email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Setup form validation using composable
+const { errors, validate: validateForm } = useFormValidation(form, {
+  username: [
+    { check: () => form.username.trim(), message: "Username is required." },
+    { check: () => form.username.length >= 3, message: "Username must be at least 3 characters." }
+  ],
+  email: [
+    { check: () => form.email.trim(), message: "Email is required." },
+    { check: () => emailRegex.test(form.email), message: "Please enter a valid email address." }
+  ],
+  password: [
+    { check: () => form.password.trim(), message: "Password is required." },
+    { check: () => form.password.length >= 6, message: "Password must be at least 6 characters." }
+  ],
+  confirmPassword: [
+    { check: () => form.confirmPassword.trim(), message: "Confirm Password is required." },
+    { check: () => form.confirmPassword === form.password, message: "Passwords do not match." }
+  ]
+});
+
+// Backend error message
 const error = ref("");
+
+// Computed property to check if form is valid
+const isFormValid = computed(() => {
+  return (
+    form.username.trim() &&
+    form.username.length >= 3 &&
+    form.email.trim() &&
+    emailRegex.test(form.email) &&
+    form.password.trim() &&
+    form.password.length >= 6 &&
+    form.confirmPassword.trim() &&
+    form.confirmPassword === form.password
+  );
+});
+
+// Watch form for real-time validation
+watch(
+  () => ({ 
+    username: form.username, 
+    email: form.email, 
+    password: form.password, 
+    confirmPassword: form.confirmPassword 
+  }),
+  () => {
+    validateForm();
+  },
+  { deep: true }
+);
 
 // Form submission
 const handleSubmit = async () => {
-  // Basic validation
-  if (!form.username || !form.email || !form.password || !form.confirmPassword) {
-    error.value = "Please fill in all fields.";
-    return;
-  }
-  if (form.password !== form.confirmPassword) {
-    error.value = "Passwords do not match.";
+  // Validate form before making request
+  if (!validateForm()) {
     return;
   }
 
   error.value = "";
 
- try {
-  const { data } = await api.post("/register", {
-    username: form.username,
-    email: form.email,
-    password: form.password,
-    password_confirmation: form.confirmPassword,
-  });
+  try {
+    const { data } = await api.post("/register", {
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      password_confirmation: form.confirmPassword,
+    });
 
-  alert(data.message);
-  console.log("Registered user:", data.user);
+    alert(data.message);
+    console.log("Registered user:", data.user);
 
-  form.username = "";
-  form.email = "";
-  form.password = "";
-  form.confirmPassword = "";
+    // Reset form
+    form.username = "";
+    form.email = "";
+    form.password = "";
+    form.confirmPassword = "";
+  } catch (err) {
+    if (err.response) {
+      const resData = err.response.data;
 
-} catch (err) {
-  if (err.response) {
-    const resData = err.response.data;
-
-    if (err.response.status === 422 && resData.errors) {
-      error.value = Object.values(resData.errors).flat().join("\n");
-    } else if (resData.message) {
-      error.value = resData.message;
+      if (err.response.status === 422 && resData.errors) {
+        error.value = Object.values(resData.errors).flat().join("\n");
+      } else if (resData.message) {
+        error.value = resData.message;
+      } else {
+        error.value = `Error: ${err.response.status} ${err.response.statusText}`;
+      }
     } else {
-      error.value = `Error: ${err.response.status} ${err.response.statusText}`;
+      error.value = "Network error or server is not responding.";
     }
-  } else {
-    error.value = "Network error or server is not responding.";
   }
-}
 };
 
 
@@ -126,8 +180,12 @@ h1 {
 }
 
 .error {
-  color: red;
+  color: #dc2626;
+  background-color: #fee2e2;
+  padding: 0.75rem;
+  border-radius: 6px;
   margin-bottom: 1rem;
+  border-left: 4px solid #dc2626;
   white-space: pre-line;
 }
 
