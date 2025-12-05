@@ -4,21 +4,37 @@
     :class="{ done: task.status === 'done' }"
   >
     <div class="task-info">
-      <h3>{{ task.title }}</h3>
-      <p>{{ task.description }}</p>
-      <span class="status">{{ task.status }}</span>
+      <template v-if="!isEditing">
+        <h3>{{ task.title }}</h3>
+        <p>{{ task.description }}</p>
+        <span class="status">{{ task.status }}</span>
+      </template>
+
+      <template v-else>
+        <input v-model="localTitle" class="edit-title" />
+        <textarea v-model="localDescription" class="edit-desc" />
+      </template>
     </div>
 
     <div class="task-actions">
-      <button @click="toggleStatus">
-        {{ task.status === 'pending' ? 'Mark Done' : 'Undo' }}
-      </button>
-      <button @click="remove" class="delete-btn">Delete</button>
+      <template v-if="!isEditing">
+        <button @click="toggleStatus" class="action-btn">
+          {{ task.status === 'pending' ? 'Mark Done' : 'Undo' }}
+        </button>
+        <button @click="startEdit" class="action-btn">Edit</button>
+        <button @click="remove" class="delete-btn">Delete</button>
+      </template>
+
+      <template v-else>
+        <button @click="saveEdit" class="action-btn save-btn">Save</button>
+        <button @click="cancelEdit" class="action-btn">Cancel</button>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useTaskStore } from "../../stores/tasks";
 
 const props = defineProps({
@@ -27,9 +43,36 @@ const props = defineProps({
 
 const taskStore = useTaskStore();
 
+const isEditing = ref(false);
+const localTitle = ref('');
+const localDescription = ref('');
+
+const startEdit = () => {
+  isEditing.value = true;
+  localTitle.value = props.task.title || '';
+  localDescription.value = props.task.description || '';
+};
+
+const cancelEdit = () => {
+  isEditing.value = false;
+};
+
+const saveEdit = async () => {
+  const title = (localTitle.value || '').trim();
+  if (!title) return; // don't allow empty title
+
+  await taskStore.editTask(props.task.id, {
+    title,
+    description: localDescription.value,
+  });
+
+  isEditing.value = false;
+};
+
 const toggleStatus = () => {
+  // Prevent toggling while editing
+  if (isEditing.value) return;
   taskStore.editTask(props.task.id, {
-    ...props.task,
     status: props.task.status === "pending" ? "done" : "pending"
   });
 };
@@ -73,6 +116,23 @@ const remove = () => taskStore.removeTask(props.task.id);
 
 .task-item.done .status {
   background-color: #86efac;
+}
+
+.edit-title {
+  width: 100%;
+  padding: 0.4rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.edit-desc {
+  width: 100%;
+  padding: 0.4rem;
+  min-height: 60px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
 }
 
 .task-actions button {
