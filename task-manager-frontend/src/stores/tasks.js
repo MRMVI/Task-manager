@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getTasks, createTask, updateTask, deleteTask } from "../api/tasks";
+import { getTasks, addTask, updateTask, deleteTask } from "../api/taskService";
 
 export const useTaskStore = defineStore("tasks", {
   state: () => ({
@@ -13,8 +13,8 @@ export const useTaskStore = defineStore("tasks", {
       this.loading = true;
       this.error = null;
       try {
-        const res = await getTasks();
-        this.tasks = res.data.data; // assume API returns { data: { data: [...] } }
+        const tasks = await getTasks();
+        this.tasks = tasks;
       } catch (err) {
         console.error("Failed to fetch tasks:", err);
         this.error = "Failed to fetch tasks.";
@@ -27,14 +27,20 @@ export const useTaskStore = defineStore("tasks", {
       this.error = null;
       // Optimistic update: add to UI first
       const tempId = Date.now(); // temporary ID
-      const tempTask = { id: tempId, ...data, status: "pending" };
+      const tempTask = { id: tempId, ...data, status: "pending", created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
       this.tasks.unshift(tempTask);
 
       try {
-        const res = await createTask(data);
+        const task = await addTask(data);
+        // Ensure task has an id before replacing
+        if (!task || !task.id) {
+          console.error('API returned invalid task:', task);
+          // Keep the temp task if response is invalid
+          return;
+        }
         // Replace temp task with server response
         const index = this.tasks.findIndex(t => t.id === tempId);
-        if (index !== -1) this.tasks[index] = res.data.data;
+        if (index !== -1) this.tasks[index] = task;
       } catch (err) {
         console.error("Failed to add task:", err);
         this.error = "Failed to add task.";
@@ -53,8 +59,8 @@ export const useTaskStore = defineStore("tasks", {
       this.tasks[index] = { ...this.tasks[index], ...data };
 
       try {
-        const res = await updateTask(id, data);
-        this.tasks[index] = res.data.data;
+        const task = await updateTask(id, data);
+        this.tasks[index] = task;
       } catch (err) {
         console.error("Failed to update task:", err);
         this.error = "Failed to update task.";
