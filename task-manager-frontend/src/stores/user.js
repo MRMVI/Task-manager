@@ -29,6 +29,7 @@ export const useUserStore = defineStore("user", {
         this.token = null;
         localStorage.removeItem("user");
         localStorage.removeItem("token");
+        localStorage.removeItem("isGuest"); // Ensure guest flag is cleared
       }
     },
   },

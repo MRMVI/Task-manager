@@ -49,6 +49,7 @@ import BaseButton from "../../components/ui/BaseButton.vue";
 import GoBack from "../../components/GoBack.vue";
 import { useFormValidation } from "../../composables/useFormValidation";
 import api from "../../plugins/axios";
+import { guestTaskService } from "../../api/guestTaskService";
 
 // Form state
 const form = reactive({
@@ -131,6 +132,10 @@ const handleSubmit = async () => {
 
     alert(data.message);
     console.log("Registered user:", data.user);
+
+    // Clear guest mode on successful authentication
+    localStorage.removeItem("isGuest");
+    await guestTaskService.clearAllTasks();
 
     // Reset form
     form.username = "";

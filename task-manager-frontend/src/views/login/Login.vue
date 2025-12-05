@@ -21,6 +21,14 @@
       <div v-if="error" class="error">{{ error }}</div>
       <BaseButton type="submit" :disabled="!isFormValid">Login</BaseButton>
     </form>
+    
+    <div class="guest-section">
+      <p class="divider-text">or</p>
+      <BaseButton @click="continueAsGuest" type="button" class="guest-button">
+        Continue as Guest
+      </BaseButton>
+    </div>
+    
     <div class="go-back-container">
       <GoBack />
     </div>
@@ -36,6 +44,7 @@ import { useFormValidation } from "../../composables/useFormValidation";
 import api from "../../plugins/axios"; 
 import { useUserStore } from "../../stores/user";
 import { useRouter } from "vue-router";
+import { guestTaskService } from "../../api/guestTaskService";
 
 // Form state
 const form = reactive({
@@ -83,6 +92,12 @@ watch(
   { deep: true }
 );
 
+// Handle guest access
+const continueAsGuest = () => {
+  localStorage.setItem("isGuest", "true");
+  router.push("/dashboard");
+};
+
 // Handle login
 const handleLogin = async () => {
   // Validate form before making request
@@ -102,6 +117,10 @@ const handleLogin = async () => {
 
     // Store user info and token in Pinia
     userStore.setUser(data.user, data.token);
+
+    // Clear guest mode on successful authentication
+    localStorage.removeItem("isGuest");
+    await guestTaskService.clearAllTasks();
 
     // Reset form
     form.email = "";
@@ -159,6 +178,44 @@ h1 {
 }
 
 .go-back-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.guest-section {
+  margin-top: 2.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.divider-text {
+  color: var(--color-text-main);
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.6;
+}
+
+.guest-button {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--color-button-bg);
+  border: 2px solid var(--color-button-bg);
+  padding: 12px 30px;
+  font-weight: 600;
+  min-width: 200px;
+}
+
+.guest-button:hover {
+  background-color: var(--color-button-bg);
+  color: var(--color-button-text);
+}go-back-container {
   display: flex;
   justify-content: center;
   margin-top: 1.5rem;

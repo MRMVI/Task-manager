@@ -26,9 +26,10 @@ const router = createRouter({
 // Global navigation guard
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore();
+  const isGuestMode = localStorage.getItem('isGuest') === 'true';
 
-  // Prevent unauthenticated access to protected pages
-  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
+  // Prevent unauthenticated access to protected pages (unless in guest mode)
+  if (to.meta.requiresAuth && !userStore.isAuthenticated && !isGuestMode) {
     return next({ path: "/login", query: { redirect: to.fullPath } });
   }
 
