@@ -171,12 +171,7 @@ h1 {
   color: #dc2626;
   background-color: #fee2e2;
   padding: 0.75rem;
-  border-radius: 6px;
-  margin-bottom: 1rem;
-  border-left: 4px solid #dc2626;
-  white-space: pre-line;
 }
-
 .go-back-container {
   display: flex;
   justify-content: center;
